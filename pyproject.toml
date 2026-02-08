@@ -1,0 +1,19 @@
+[project]
+name = "music-library-orchestrator-bpm"
+version = "0.1.0"
+description = "Download, tag, and organize MP3 files from archive.org"
+authors = [
+    {name = "Marc",email = "m4rklar@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "requests (>=2.32.5,<3.0.0)",
+    "pygame (>=2.6.1,<3.0.0)",
+    "mutagen (>=1.47.0,<2.0.0)"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
