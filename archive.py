@@ -41,8 +41,9 @@ def download_mp3(identifier, filename, download_base, head, dest_dir):
     local_path = os.path.join(dest_dir, filename)
 
     if os.path.exists(local_path):
-        return None # already downloaded
+        return local_path # already downloaded
 
+    os.makedirs(dest_dir, exist_ok=True)
     with requests.get(url, stream=True, headers=head, timeout=60) as r:
         r.raise_for_status()
         total = int(r.headers.get("content-length", 0))

@@ -42,14 +42,14 @@ def measure_bpm_ui(mp3_path):
     running = True
     while running:
         screen.fill((30, 30, 30))
-        screen.blit(font.render(f"Canción: {os.path.basename(mp3_path)}", True, (220, 220, 220)), (40, 40))
+        screen.blit(font.render(f"Now Playing:\n{os.path.basename(mp3_path)}", True, (220, 220, 220)), (40, 40))
         bpm_text = f"BPM: {int(bpm) if bpm else '--'}"
         screen.blit(font.render(bpm_text, True, (180, 220, 180)), (40, 100))
         screen.blit(font.render("SPACE=Tap | ENTER=Guardar | ESC=Cancelar", True, (150, 150, 150)), (40, 160))
 
-        draw_button(btn_play, "▶ Play")
-        draw_button(btn_stop, "⏸ Stop")
-        draw_button(btn_restart, "↺ Reset")
+        draw_button(btn_play, "[> ] Play")
+        draw_button(btn_stop, "[||] Stop")
+        draw_button(btn_restart, "[R] Restart")
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:

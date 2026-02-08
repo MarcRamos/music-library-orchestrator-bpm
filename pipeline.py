@@ -10,37 +10,33 @@ from csv_store import load_processed_set, append_entry
 from bpm_organizer import bpm_folder
 
 
-processed = load_processed_set()
-print(processed)
-page = 1
-total_items = None
-
-DEST_DIR = os.path.join("download", "raw")
-os.makedirs(DEST_DIR, exist_ok=True)
-
-# Add or remove query fields as you wish
-# It's more useful to do the query in the archive.org page and then
-# update these values accordingly.
-
-SEARCH_QUERY = (
-    'subject:"1930s" AND subject:(Jazz OR Swing OR "Big Band") '
-    'AND mediatype:audio '
-    'AND collection:audio_music '
-    'AND year:[1927 TO 1945] '
-    'AND creator:"johnny hodges orchestra'
-)
-
-ROWS_PER_PAGE = 100
-BASE_SEARCH_URL = "https://archive.org/advancedsearch.php"
-METADATA_URL = "https://archive.org/metadata"
-DOWNLOAD_BASE = "https://archive.org/download"
-
-HEADERS = {"User-Agent": "archive-downloader (educational use)"}
-
-# ================= HELPERS =================
-
-
 def process_archive_files():
+    processed = load_processed_set()
+    print(processed)
+
+    DEST_DIR = os.path.join("download", "raw")
+    os.makedirs(DEST_DIR, exist_ok=True)
+
+    # Add or remove query fields as you wish
+    # It's more useful to do the query in the archive.org page and then
+    # update these values accordingly.
+
+    SEARCH_QUERY = (
+        'subject:"1930s" AND subject:(Jazz OR Swing OR "Big Band") '
+        'AND mediatype:audio '
+        'AND collection:audio_music '
+        'AND year:[1927 TO 1945] '
+        'AND creator:(johnny hodges orchestra)'
+    )
+
+    ROWS_PER_PAGE = 100
+    BASE_SEARCH_URL = "https://archive.org/advancedsearch.php"
+    METADATA_URL = "https://archive.org/metadata"
+    DOWNLOAD_BASE = "https://archive.org/download"
+
+    HEADERS = {"User-Agent": "archive-downloader (educational use)"}
+    page = 1
+    total_items = None
     while True:
         response = search_items(
             SEARCH_QUERY, 
@@ -64,7 +60,7 @@ def process_archive_files():
             identifier = item["identifier"]
             mp3s = get_mp3_files(identifier, METADATA_URL, HEADERS)
             for mp3 in mp3s:
-
+                print(f"MP3: {mp3}")
                 mp3_path = download_mp3(
                     identifier, mp3, DOWNLOAD_BASE, HEADERS, DEST_DIR
                 )
