@@ -2,6 +2,7 @@ import time
 import os
 import argparse
 import glob
+import re
 
 from archive import search_items, get_mp3_files, download_mp3
 from audio_utils import normalize_mp3, save_bpm_to_mp3
@@ -79,9 +80,12 @@ def process_archive_files():
                 print("🎶 Successfully processed\n")
 
 
-def process_local_folder(folder_path):
-    """Processes all MP3s in a folder using the BPM UI"""
-    mp3_files = glob.glob(os.path.join(folder_path, "*.mp3"))
+def process_local_folder(folder_path, out_folder="library/"):
+    """Processes all MP3s without BPM tag in a folder using the BPM UI"""
+    mp3_files = [
+        p for p in glob.glob(os.path.join(folder_path, "*.mp3"))
+        if not re.match(r'^\(\d+\)', os.path.basename(p))
+    ]
     for mp3_path in mp3_files:
         print(f"🎵 Processing {os.path.basename(mp3_path)}")
         bpm = measure_bpm_ui(mp3_path)
@@ -89,7 +93,8 @@ def process_local_folder(folder_path):
             print("⏭️ Skipped by the user")
             continue
         save_bpm_to_mp3(mp3_path, bpm)
-        object_mp3 = normalize_mp3(mp3_path, os.path.join("library", bpm_folder(bpm)))
+        bpm_out_folder = os.path.join(out_folder, bpm_folder(bpm))
+        object_mp3 = normalize_mp3(mp3_path, bpm_out_folder)
         object_mp3.update({"id": None})
         append_entry(**object_mp3)
         print("✅ Successfully processed\n")
@@ -105,13 +110,19 @@ if __name__ == "__main__":
         help="Process all MP3s in the specified folder using the BPM UI"
     )
 
+    parser.add_argument(
+        "--out-folder", type=str, default=None,
+        help="Save resulting mp3 with BPM tag and moves inside a" \
+        " BPM ranged folder within output location"
+    )
+
     args = parser.parse_args()
 
     if args.folder:
         if not os.path.isdir(args.folder):
             print(f"❌ Folder {args.folder} does not exist")
         else:
-            process_local_folder(args.folder)
+            process_local_folder(args.folder, args.out_folder)
     else:
         print("🚀 Starting Archive.org download and BPM pipeline…")
         process_archive_files()
