@@ -4,28 +4,33 @@ import requests
 from tqdm import tqdm
 
 
+SEARCH_QUERY = (
+    'subject:"1930s" AND subject:(Jazz OR Swing OR "Big Band") '
+    'AND mediatype:audio '
+    'AND collection:audio_music '
+    'AND year:[1927 TO 1945] '
+    'AND creator:(johnny hodges orchestra)'
+)
+ROWS_PER_PAGE = 100
+BASE_SEARCH_URL = "https://archive.org/advancedsearch.php"
+METADATA_URL = "https://archive.org/metadata"
+DOWNLOAD_BASE = "https://archive.org/download"
+HEADERS = {"User-Agent": "archive-downloader (educational use)"}
 
-
-def search_items(
-        search_query, 
-        rows_per_page,
-        base_search_url,
-        headers,
-        page
-    ):
+def search_items(page):
     params = {
-        "q": search_query,
+        "q": SEARCH_QUERY,
         "fl[]": "identifier",
-        "rows": rows_per_page,
+        "rows": ROWS_PER_PAGE,
         "page": page,
         "output": "json",
     }
-    r = requests.get(base_search_url, params=params, headers=headers, timeout=30)
+    r = requests.get(BASE_SEARCH_URL, params=params, headers=HEADERS, timeout=30)
     r.raise_for_status()
     return r.json()["response"]
 
-def get_mp3_files(identifier, metadata_url, headers):
-    r = requests.get(f"{metadata_url}/{identifier}", headers=headers, timeout=30)
+def get_mp3_files(identifier):
+    r = requests.get(f"{METADATA_URL}/{identifier}", headers=HEADERS, timeout=30)
     r.raise_for_status()
     data = r.json()
 
@@ -36,15 +41,15 @@ def get_mp3_files(identifier, metadata_url, headers):
             mp3s.append(name)
     return mp3s
 
-def download_mp3(identifier, filename, download_base, head, dest_dir):
-    url = f"{download_base}/{identifier}/{filename}"
+def download_mp3(identifier, filename, dest_dir):
+    url = f"{DOWNLOAD_BASE}/{identifier}/{filename}"
     local_path = os.path.join(dest_dir, filename)
 
     if os.path.exists(local_path):
         return local_path # already downloaded
 
     os.makedirs(dest_dir, exist_ok=True)
-    with requests.get(url, stream=True, headers=head, timeout=60) as r:
+    with requests.get(url, stream=True, headers=HEADERS, timeout=60) as r:
         r.raise_for_status()
         total = int(r.headers.get("content-length", 0))
 

@@ -4,11 +4,13 @@ import argparse
 import glob
 import re
 
-from archive import search_items, get_mp3_files, download_mp3
-from audio_utils import normalize_mp3, save_bpm_to_mp3
-from bpm_ui import measure_bpm_ui
-from csv_store import load_processed_set, append_entry
-from bpm_organizer import bpm_folder
+import click
+
+from music_tapper.utils.archive import search_items, get_mp3_files, download_mp3
+from music_tapper.utils.audio_utils import normalize_mp3_name_meta, save_bpm_to_mp3
+from music_tapper.utils.bpm_ui import measure_bpm_ui
+from music_tapper.utils.csv_store import load_processed_set, append_entry
+from music_tapper.utils.bpm_organizer import bpm_folder
 
 
 def process_archive_files():
@@ -18,34 +20,11 @@ def process_archive_files():
     DEST_DIR = os.path.join("download", "raw")
     os.makedirs(DEST_DIR, exist_ok=True)
 
-    # Add or remove query fields as you wish
-    # It's more useful to do the query in the archive.org page and then
-    # update these values accordingly.
-
-    SEARCH_QUERY = (
-        'subject:"1930s" AND subject:(Jazz OR Swing OR "Big Band") '
-        'AND mediatype:audio '
-        'AND collection:audio_music '
-        'AND year:[1927 TO 1945] '
-        'AND creator:(johnny hodges orchestra)'
-    )
-
-    ROWS_PER_PAGE = 100
-    BASE_SEARCH_URL = "https://archive.org/advancedsearch.php"
-    METADATA_URL = "https://archive.org/metadata"
-    DOWNLOAD_BASE = "https://archive.org/download"
-
-    HEADERS = {"User-Agent": "archive-downloader (educational use)"}
     page = 1
     total_items = None
-    while True:
-        response = search_items(
-            SEARCH_QUERY, 
-            ROWS_PER_PAGE,
-            BASE_SEARCH_URL,
-            HEADERS,
-            page
-        )
+    running = True
+    while running:
+        response = search_items(page)
 
         if total_items is None:
             total_items = response["numFound"]
@@ -59,25 +38,28 @@ def process_archive_files():
 
         for item in items:
             identifier = item["identifier"]
-            mp3s = get_mp3_files(identifier, METADATA_URL, HEADERS)
-            for mp3 in mp3s:
-                print(f"MP3: {mp3}")
-                mp3_path = download_mp3(
-                    identifier, mp3, DOWNLOAD_BASE, HEADERS, DEST_DIR
-                )
+            file_names = get_mp3_files(identifier)
+            for file_name in file_names:
+                print(f"MP3 file: {file_name}")
+                mp3_path = download_mp3(identifier, file_name, DEST_DIR)
                 time.sleep(0.5)  # be nice to archive.org
-                bpm = measure_bpm_ui(mp3_path)
+                bpm, running = measure_bpm_ui(mp3_path)
                 if bpm is None:
+                    if not running:
+                        print("🚫 Cancelled by the user")
+                        break
                     print("⏭️ Skipped by the user")
                     continue
                 
                 save_bpm_to_mp3(mp3_path, bpm)
-                object_mp3 = normalize_mp3(
+                object_mp3 = normalize_mp3_name_meta(
                     mp3_path, os.path.join("library", bpm_folder(bpm))
                 )
                 object_mp3.update({"id": identifier})
                 append_entry(**object_mp3)
                 print("🎶 Successfully processed\n")
+            if not running:
+                break
 
 
 def process_local_folder(folder_path, out_folder="library/"):
@@ -99,8 +81,7 @@ def process_local_folder(folder_path, out_folder="library/"):
         append_entry(**object_mp3)
         print("✅ Successfully processed\n")
 
-
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser(
         description="Full pipeline: download songs from Archive.org, " \
         "measure BPM, and organize into folders"
@@ -120,9 +101,30 @@ if __name__ == "__main__":
 
     if args.folder:
         if not os.path.isdir(args.folder):
-            print(f"❌ Folder {args.folder} does not exist")
+            raise FileNotFoundError(f"❌ Folder {args.folder} does not exist")
+        if args.out_folder is None:
+            raise ValueError(f"❌ Output Folder must be defined (--out-folder arg)")
+        if not os.path.isdir(args.out_folder):
+             print(f"❌ Output folder {args.out_folder} does not exist")
         else:
             process_local_folder(args.folder, args.out_folder)
     else:
         print("🚀 Starting Archive.org download and BPM pipeline…")
         process_archive_files()
+
+
+@click.group()
+def main():
+    """🎧 Music Library BPM Orchestrator"""
+    pass
+
+@main.command()
+def download():
+    """Download songs from Archive.org and process BPM"""
+    process_archive_files()
+
+@main.command()
+@click.argument("folder", type=click.Path(exists=True))
+def folder(folder):
+    """Process all MP3 files in a local folder"""
+    process_local_folder(folder)

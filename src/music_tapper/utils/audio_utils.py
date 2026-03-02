@@ -11,7 +11,7 @@ def sanitize(text):
     text = "".join(c for c in text if c not in r'<>:"/\|?*')
     return " ".join(w.capitalize() for w in text.split())
 
-def normalize_mp3(path, dest_dir):
+def normalize_mp3_name_meta(path, dest_dir):
     audio = MP3(path)
     artist = audio.get("TPE1", [""])[0]
     title = audio.get("TIT2", [""])[0]
