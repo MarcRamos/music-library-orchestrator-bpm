@@ -5,16 +5,57 @@ import os
 
 def measure_bpm_ui(mp3_path):
     """
-    Abre UI para medir BPM:
-    - SPACE = Tap
-    - ENTER = Guardar
-    - ESC = Cancelar
-    - Botones:
-        ▶ Play
-        ⏸ Stop
-        ↺ Reset (reinicia reproducción)
-        X Cancel (Aborta ejecución)
-    Devuelve BPM medido por el usuario (int) o None si cancelado.
+    Launch an interactive UI to measure the BPM of an MP3 track by tapping.
+
+    This function opens a Pygame window that allows the user to play an MP3
+    file and estimate its BPM by tapping the space bar in rhythm with the music.
+    The BPM is calculated in real time using the average interval between taps.
+
+    Controls
+    --------
+    Keyboard:
+        SPACE : Register a tap to compute BPM
+        ENTER : Save and confirm the current BPM value
+        ESC   : Cancel and exit without saving
+
+    Mouse (UI buttons):
+        [> ]   : Play the track
+        [||]   : Stop playback
+        [R]    : Restart playback from the beginning and reset BPM calculation
+        [>> ]  : Skip the track (exit without saving)
+
+    Parameters
+    ----------
+    mp3_path : str
+        Path to the MP3 file to be played and analyzed.
+
+    Returns
+    -------
+    bpm : int or None
+        The BPM value measured by the user. Returns ``None`` if the user cancels
+        or skips the track.
+    running : bool
+        Indicates whether the application should continue processing more tracks.
+        Returns ``False`` only when the user closes the window or presses ESC.
+
+    Notes
+    -----
+    - BPM is computed as: ``60 / average_interval_between_taps``.
+    - Only the most recent taps are used to smooth the BPM estimation.
+    - Playback is handled using ``pygame.mixer.music``.
+    - The UI runs at ~60 FPS and updates BPM in real time.
+
+    Side Effects
+    ------------
+    - Initializes and quits Pygame and its mixer module.
+    - Opens a graphical window.
+    - Plays audio from the provided MP3 file.
+
+    Examples
+    --------
+    >>> bpm, running = measure_bpm_ui("song.mp3")
+    >>> if bpm:
+    ...     print(f"Measured BPM: {bpm}")
     """
 
     pygame.init()
