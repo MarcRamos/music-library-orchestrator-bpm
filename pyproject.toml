@@ -1,6 +1,6 @@
 [project]
 name = "music-tapper"
-version = "0.1.0"
+version = "0.1.1.dev1"
 description = "Download, tag, and organize MP3 files from archive.org"
 authors = [
     {name = "Marc", email = "m4rklar@gmail.com"}

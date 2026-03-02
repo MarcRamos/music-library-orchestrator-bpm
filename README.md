@@ -16,6 +16,17 @@ It integrates with Archive.org and provides a manual BPM tap interface using pyg
 
 ---
 
+## 🚀 Installation
+
+Install from [pypi.org](https://pypi.org/project/music-tapper/) or [pypi.org](https://pypi.org/project/music-tapper/) in your environment.
+
+To test that it was installed properly run:
+
+```bash
+music-tapper
+```
+
+
 ## 🚀 Installation (local dev)
 
 This project uses **Poetry**.
