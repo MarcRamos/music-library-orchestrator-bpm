@@ -35,6 +35,8 @@ def measure_bpm_ui(mp3_path):
     btn_stop = btn_stop.move(move_btn, 0)
     btn_restart = btn_stop.copy()
     btn_restart = btn_restart.move(move_btn, 0)
+    btn_skip = btn_restart.copy()
+    btn_skip = btn_skip.move(move_btn, 0)
 
     def draw_button(rect, text):
         mouse = pygame.mouse.get_pos()
@@ -46,14 +48,16 @@ def measure_bpm_ui(mp3_path):
     running = True
     while running:
         screen.fill((30, 30, 30))
-        screen.blit(font.render(f"Now Playing:\n{os.path.basename(mp3_path)}", True, (220, 220, 220)), (40, 40))
+        screen.blit(font.render("Now Playing:", True, (220, 220, 220)), (40, 40))
+        screen.blit(font.render(f"{os.path.basename(mp3_path).strip()}", True, (220, 220, 220)), (60, 80))
         bpm_text = f"BPM: {int(bpm) if bpm else '--'}"
-        screen.blit(font.render(bpm_text, True, (180, 220, 180)), (40, 100))
+        screen.blit(font.render(bpm_text, True, (180, 220, 180)), (40, 120))
         screen.blit(font.render("SPACE=Tap | ENTER=Save | ESC=Exit", True, (150, 150, 150)), (40, 160))
 
         draw_button(btn_play, "[> ]")
         draw_button(btn_stop, "[||]")
         draw_button(btn_restart, "[R]")
+        draw_button(btn_skip, "[>> ]")
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -94,6 +98,9 @@ def measure_bpm_ui(mp3_path):
                     pygame.mixer.music.play()
                     playing = True
                     bpm = 0  # restart bpm counting
+                elif btn_skip.collidepoint(event.pos):
+                    pygame.mixer.music.stop()
+                    return None, running
 
         pygame.display.flip()
         clock.tick(60)
